@@ -24,7 +24,7 @@ Requires packages: `dc, openssl, perl, sed, cat, printf`
 - with balance: `./bw.sh -b -p password`
 - json output: `./bw.sh -j -p password`
 - with balance & json output: `./bw.sh -j -b -p password`
-- more complex: see [batch example](example/README.md)
+- more complex: see [batch example](example/)
 
 #### Screenshots
 
