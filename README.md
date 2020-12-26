@@ -25,7 +25,7 @@ Requires packages: `dc, openssl, perl, sed, cat, printf`
 
 #### Screenshots
 
-![img](https://user-images.githubusercontent.com/6382002/103156465-0e4e7500-47a9-11eb-8d6a-f03403e7f22a.png)
+![imgraw](https://user-images.githubusercontent.com/6382002/103156505-71400c00-47a9-11eb-8808-8eb1e6c90d13.png)
 
 ![imgjson](https://user-images.githubusercontent.com/6382002/103156476-28885300-47a9-11eb-9529-39676e3c1ce2.png)
 
