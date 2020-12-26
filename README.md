@@ -4,6 +4,9 @@ A brainwallet refers to the concept of storing Bitcoins in one's own mind by mem
 
 A brainwallet is created simply by starting with a unique phrase. The phrase must be sufficiently long to prevent brute-force guessing - a short password, a simple phrase, or a phrase taken from published literature is likely to be stolen by hackers who use computers to quickly try combinations. A suggestion is to take a memorable phrase and change it in a silly way that is difficult to predict.
 
+![imgjson](https://user-images.githubusercontent.com/6382002/103156476-28885300-47a9-11eb-9529-39676e3c1ce2.png)
+
+
 #### Install
 
 ```bash
@@ -26,7 +29,6 @@ Requires packages: `dc, openssl, perl, sed, cat, printf`
 #### Screenshots
 
 ![imgraw](https://user-images.githubusercontent.com/6382002/103156505-71400c00-47a9-11eb-8808-8eb1e6c90d13.png)
-
 ![imgjson](https://user-images.githubusercontent.com/6382002/103156476-28885300-47a9-11eb-9529-39676e3c1ce2.png)
 
 #### Steps I recommend:
