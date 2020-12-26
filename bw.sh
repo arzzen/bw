@@ -1,36 +1,41 @@
 #!/bin/bash
 
 #
-# Bitcoin Brain wallet inspector
+# Bitcoin Brain Wallet Inspector
 #
-_APP_VERSION="v0.2.0"
+_APP_VERSION="v0.3.0"
 
 # Application defaults
-_APP_TRANSACTION=0 # 0=off (default) / 1=on
+# 0=off (default) / 1=on
+_APP_BALANCE=0 
+_APP_JSON=0
 
 #
-# Show app head
+# Show version
 #
-showAppHead()
+showVersion()
 {
-    echo "\"version\": \"${_APP_VERSION}\","
+    echo "Version: ${_APP_VERSION}"
 }
 
 #
-# Show app help
+# Show help
 #
-showAppHelp()
+showHelp()
 {
-    showAppHead
-    echo "Usage: brainwalletinspect [-ptv]"
-    echo "  -p <arg> Brain wallet password in clear text"
-    echo "  -t Show Bitcoin address balance"
+    echo ""
+    echo "Usage: bw.sh [-b -j -p \"pass\"]"
+    echo 
+    echo "  -b Show Bitcoin address balance (optional)"
+    echo "  -j Show as JSON output (optional)"
+    echo "  -p <arg> Brain wallet password in clear text (require)"
     echo "  -v Show version"
     echo ""
-    echo "You can use this tool to inspect your (or others) brain wallets. Make sure you use an "
-    echo "complex password if you decide to use this."
+    echo "You can use this tool to inspect your (or others) brain wallets."
+    echo "Make sure you use an complex password if you decide to use this."
     echo ""
     echo "Known brain wallets are: sausage, fuckyou"
+    echo ""
 }
 
 #
@@ -38,9 +43,7 @@ showAppHelp()
 #
 showAppVersion()
 {
-    echo "{"
-    showAppHead
-    echo "}"
+    showVersion
     exit 0
 }
 
@@ -49,9 +52,7 @@ showAppVersion()
 #
 brainWalletInspect()
 {
-    echo "{"
-    showAppHead
-    #echo "Inspecting brain wallet: ${1}"
+    res="{"
     declare -a base58=(
           1 2 3 4 5 6 7 8 9
         A B C D E F G H   J K L M N   P Q R S T U V W X Y Z
@@ -77,41 +78,41 @@ brainWalletInspect()
     # Password
     #
     PASSWORD=$1
-    echo "\"password_clear_text\": \"${PASSWORD}\","
+    res=$res"\"password_clear_text\": \"${PASSWORD}\","
 
     #
     # Compute BTC private key
     #
     PASSWORD_SHA256=`echo -n "${PASSWORD}" | sha256sum | awk '{print $1}'`
-    echo "\"password_SHA256\": \"$PASSWORD_SHA256\","
+    res=$res"\"password_SHA256\": \"$PASSWORD_SHA256\","
 
     PASSWORD_SHA256_EXT="80${PASSWORD_SHA256}"
-    echo "\"password_SHA256_extended\": \"$PASSWORD_SHA256_EXT\","
+    res=$res"\"password_SHA256_extended\": \"$PASSWORD_SHA256_EXT\","
 
     PASSWORD_SHA256_EXT_SHA256=`echo -n "${PASSWORD_SHA256_EXT}" | xxd -r -p | sha256sum -b | awk '{print $1}'`
-    echo "\"password_SHA256_extended_SHA256\": \"$PASSWORD_SHA256_EXT_SHA256\","
+    res=$res"\"password_SHA256_extended_SHA256\": \"$PASSWORD_SHA256_EXT_SHA256\","
 
     PASSWORD_SHA256_EXT_SHA256_CHECKSUM=`echo -n "${PASSWORD_SHA256_EXT_SHA256}" | xxd -r -p | sha256sum -b | awk '{print $1}'`
-    echo "\"password_checksum_SHA256_extended_SHA256\": \"$PASSWORD_SHA256_EXT_SHA256_CHECKSUM\","
+    res=$res"\"password_checksum_SHA256_extended_SHA256\": \"$PASSWORD_SHA256_EXT_SHA256_CHECKSUM\","
 
     PASSWORD_SHA256_EXT_SHA256_CHECKSUM_HEAD=`echo -n "${PASSWORD_SHA256_EXT_SHA256_CHECKSUM}" | cut -b -8`
-    echo "\"password_checksum_head_SHA256_extended_SHA256\": \"$PASSWORD_SHA256_EXT_SHA256_CHECKSUM_HEAD\","
+    res=$res"\"password_checksum_head_SHA256_extended_SHA256\": \"$PASSWORD_SHA256_EXT_SHA256_CHECKSUM_HEAD\","
 
     PRIVATE_KEY_BASE16="${PASSWORD_SHA256_EXT}${PASSWORD_SHA256_EXT_SHA256_CHECKSUM_HEAD}"
-    echo "\"private_key_base16\": \"$PRIVATE_KEY_BASE16\","
+    res=$res"\"private_key_base16\": \"$PRIVATE_KEY_BASE16\","
 
     encodeBase58() {
         dc -e "16i ${1^^} [3A ~r d0<x]dsxx +f" |
         while read -r n; do echo -n "${base58[n]}"; done
     }
     PRIVATE_KEY_BASE58=`encodeBase58 $PRIVATE_KEY_BASE16`
-    echo "\"private_key_base58\": \"${PRIVATE_KEY_BASE58}\","
+    res=$res"\"private_key_base58\": \"${PRIVATE_KEY_BASE58}\","
 
     #
     # Compute BTC address
     #
     SECRET_EXPONENT="${PASSWORD_SHA256}"
-    echo "\"secret_exponent\": \"${SECRET_EXPONENT}\","
+    res=$res"\"secret_exponent\": \"${SECRET_EXPONENT}\","
 
     checksum() {
         perl -we "print pack 'H*', '$1'" |
@@ -136,37 +137,37 @@ brainWalletInspect()
     }
 
     PUBLIC_KEY_X_AND_Y=`dc -e "$ec_dc lG I16i${SECRET_EXPONENT^^}ri lMx 16olm~ n[ ]nn"`
-    #echo "  \"Public keys (Y & X)\":                                  \"${PUBLIC_KEY_X_AND_Y}\","
+    #res=$res  \"Public keys (Y & X)\": \"${PUBLIC_KEY_X_AND_Y}\","
 
     PUBLIC_KEY_X=`echo ${PUBLIC_KEY_X_AND_Y} | awk '{print $2}'`
-    echo "\"public_key_X\": \"${PUBLIC_KEY_X}\","
+    res=$res"\"public_key_X\": \"${PUBLIC_KEY_X}\","
 
     PUBLIC_KEY_Y=`echo ${PUBLIC_KEY_X_AND_Y} | awk '{print $1}'`
-    echo "\"public_key_Y\": \"${PUBLIC_KEY_Y}\","
+    res=$res"\"public_key_Y\": \"${PUBLIC_KEY_Y}\","
 
     WIF_COMPRESSED="$(hexToAddress "${SECRET_EXPONENT}01" 80 66)"
-    echo "\"wallet_import_format_WIF_compressed\": \"${WIF_COMPRESSED}\","
+    res=$res"\"wallet_import_format_WIF_compressed\": \"${WIF_COMPRESSED}\","
 
     WIF_UNCOMPRESSED="$(hexToAddress "${SECRET_EXPONENT}" 80 64)"
-    echo "\"wallet_import_format_WIF_uncompressed\": \"${WIF_UNCOMPRESSED}\","
+    res=$res"\"wallet_import_format_WIF_uncompressed\": \"${WIF_UNCOMPRESSED}\","
 
     if [[ "$PUBLIC_KEY_Y" =~ [02468ACE]$ ]]
     then y_parity="02"
     else y_parity="03"
     fi
     ADDRESS_COMPRESSED="$(hexToAddress "$(perl -e "print pack q(H*), q($y_parity$PUBLIC_KEY_X)" | hash160)")"
-    echo "\"address_compressed\": \"${ADDRESS_COMPRESSED}\","
+    res=$res"\"address_compressed\": \"${ADDRESS_COMPRESSED}\","
 
     ADDRESS_UNCOMPRESSED="$(hexToAddress "$(perl -e "print pack q(H*), q(04$PUBLIC_KEY_X$PUBLIC_KEY_Y)" | hash160)")"
-    echo "\"address_uncompressed\": \"${ADDRESS_UNCOMPRESSED}\","
+    res=$res"\"address_uncompressed\": \"${ADDRESS_UNCOMPRESSED}\""
 
     #
-    # Transactions
+    # Balance
     #
-    if [ "$_APP_TRANSACTION" -eq 1 ]; then
-        BTC_RECEIVED=`GET https://blockchain.info/q/addressbalance/${ADDRESS_UNCOMPRESSED}`
-        echo "\"blockchain_URL\": \"https://www.blockchain.com/btc/address/${ADDRESS_UNCOMPRESSED}\","
-        echo "\"blockchain_API\": \"https://api.blockcypher.com/v1/btc/main/addrs/${ADDRESS_UNCOMPRESSED}\","
+    if [ "$_APP_BALANCE" -eq 1 ]; then
+        res=$res","
+        res=$res"\"blockchain_URL\": \"blockchain.com/btc/address/${ADDRESS_UNCOMPRESSED}\","
+        res=$res"\"blockchain_API\": \"api.blockcypher.com/v1/btc/main/addrs/${ADDRESS_UNCOMPRESSED}\","
             
         if [ -n "$BLOCKCYPHER_TOKEN" ]; then
             API_URL="https://api.blockcypher.com/v1/btc/main/addrs/${ADDRESS_UNCOMPRESSED}/balance?token=$BLOCKCYPHER_TOKEN"
@@ -176,31 +177,53 @@ brainWalletInspect()
 
         BTC_BALANCE=`curl -s "$API_URL" | jq .final_balance`
         balance=$(echo "$BTC_BALANCE/100000000" | bc -l)
-        echo "\"balance_BTC_sat\": \"${BTC_BALANCE}\","
-        echo "\"balance_BTC\": \"${balance}\""
-    fi
 
-    echo "}"
+        BTC_RECEIVED=`curl -s "$API_URL" | jq .total_received`
+        received=$(echo "$BTC_RECEIVED/100000000" | bc -l)
+
+        res=$res"\"balance_BTC_sat\": \"${BTC_BALANCE}\","
+        res=$res"\"balance_BTC\": \"${balance}\","
+        res=$res"\"received_BTC_sat\": \"${BTC_RECEIVED}\","
+        res=$res"\"received_BTC\": \"${received}\""
+    fi
+    res=$res"}"
+
+    if [ "$_APP_JSON" -eq 1 ]; then
+        echo $res
+    else
+        pad='----------------------------------------------------'
+        lines=`echo $res | tr -d '{} "' | tr ',' '\n'`
+        for line in $lines
+        do
+            string1=`echo $line | cut -d ":" -f 1`
+            string2=`echo $line | cut -d ":" -f 2`
+            printf "%s %s $string2\n" $string1 "${pad:${#string1}}"
+            string2=${string2:1}
+        done
+    fi
 }
 
 #
 # Parse command-line arguments
 #
-while getopts "h?vtp:" opt; do
+while getopts "h?vbjp:" opt; do
     case "$opt" in
-        transaction|t)
-            _APP_TRANSACTION=1
+        b)
+            _APP_BALANCE=1
             ;;
-        help|h|\?)
-            showAppHelp
+        j)
+            _APP_JSON=1
+            ;;
+        h|\?)
+            showHelp
             exit 0
             ;;
-        version|v)
+        v)
             showAppVersion
             exit 0
             ;;
-        password|p)
-            brainWalletInspect $OPTARG
+        p)
+            brainWalletInspect "$OPTARG"
             exit 0
             ;;
     esac
