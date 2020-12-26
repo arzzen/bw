@@ -25,9 +25,10 @@ Requires packages: `dc, openssl, perl, sed, cat, printf`
 
 #### Screenshots
 
-![img](https://user-images.githubusercontent.com/6382002/103156444-ef4fe300-47a8-11eb-8066-c9d1c25a6443.png)
+![img](https://user-images.githubusercontent.com/6382002/103156465-0e4e7500-47a9-11eb-8d6a-f03403e7f22a.png)
 
-![imgjson](https://user-images.githubusercontent.com/6382002/103156422-b4e64600-47a8-11eb-8cd8-95c9940b825d.png)
+![imgjson](https://user-images.githubusercontent.com/6382002/103156476-28885300-47a9-11eb-9529-39676e3c1ce2.png)
+
 #### Steps I recommend:
 
 1. Disconnect your computer from Internet, WIFI etc (physically) and make sure nobody stand near your display.
